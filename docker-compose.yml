@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        HTTP_PROXY: http://192.168.98.199:8080
+        HTTPS_PROXY: http://192.168.98.199:8080
+        NO_PROXY: localhost,127.0.0.1
+    container_name: event_template_web
+    env_file:
+      - .env
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    dns_search: []
+    ports:
+      - "7000:3000"
+    volumes:
+      - ./public:/app/public:rw
+    restart: unless-stopped
+    command: ["npm", "run", "start"]
