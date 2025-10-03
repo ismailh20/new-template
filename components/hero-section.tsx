@@ -17,7 +17,7 @@ export function HeroSection({ eventId, merchantId }: HeroSectionProps) {
   useEffect(() => {
     const fetchEventData = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/events?event_id=${eventId}&merchant_id=${merchantId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/events?event_id=${eventId}&merchant_id=${merchantId}`);
         const data = await res.json();
 
         if (data.error) {

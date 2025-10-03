@@ -79,7 +79,7 @@ export function GuestStarsSection({ eventId }: GuestStarsSectionProps) {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/guests/stars?event_id=${eventId}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/guests/stars?event_id=${eventId}`
       );
 
       if (!res.ok) {

@@ -29,7 +29,7 @@ export function VenueSection({ eventId, merchantId }: VenueSectionProps) {
     setIsLoading(true);
     try {
       const res = await fetch(
-        `http://localhost:3000/facilities/venue?event_id=${eventId}&merchant_id=${merchantId}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/facilities/venue?event_id=${eventId}&merchant_id=${merchantId}`
       );
 
       const data = await res.json();

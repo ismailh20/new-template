@@ -125,7 +125,7 @@ export function EventForm({ eventId }: EventFormProps) {
       setIsLoadingTickets(true);
       try {
         const res = await fetch(
-          `http://localhost:3000/tickets/event?event_id=${eventId}`
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/tickets/event?event_id=${eventId}`
         );
         const data = await res.json();
 
@@ -167,7 +167,7 @@ export function EventForm({ eventId }: EventFormProps) {
         phone: formData.phone,
       };
 
-      const resUser = await fetch("http://localhost:3000/users/upsert", {
+      const resUser = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/upsert`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,7 +197,7 @@ export function EventForm({ eventId }: EventFormProps) {
         )?.id,
       };
 
-      const resOrder = await fetch("http://localhost:3000/order-transactions", {
+      const resOrder = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/order-transactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(orderData),
@@ -224,7 +224,7 @@ export function EventForm({ eventId }: EventFormProps) {
         order_id: dataOrder.id,
       };
 
-      const resTicket = await fetch("http://localhost:3000/ticket-details", {
+      const resTicket = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ticket-details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ticketDetail),
