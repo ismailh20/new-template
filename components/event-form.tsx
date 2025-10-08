@@ -156,11 +156,6 @@ export function EventForm({ eventId }: EventFormProps) {
     setIsLoading(true);
 
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-
       const userData = {
         name: formData.name,
         email: formData.email,
@@ -242,7 +237,7 @@ export function EventForm({ eventId }: EventFormProps) {
           startDate,
           endDate,
           bookingDetails: {
-            ticketId: `JF2024-${dataTicket.id}`,
+            ticketId: `${dataTicket.id}`,
             orderId: dataTicket.id.toString(),
             totalPrice: dataTicket.ticket_quantity * 350000, // Calculate based on ticket type
             days: 1,
@@ -384,7 +379,7 @@ export function EventForm({ eventId }: EventFormProps) {
   if (isSubmitted) {
     const ticketId =
       formData.bookingDetails?.ticketId ||
-      `JF2024-${Date.now().toString().slice(-6)}`;
+      `${Date.now().toString().slice(-6)}`;
     const qrData = JSON.stringify({
       ticketId,
       orderId: formData.bookingDetails?.orderId,
@@ -444,7 +439,7 @@ export function EventForm({ eventId }: EventFormProps) {
           <Card className="border border-amber-500/20 shadow-2xl backdrop-blur-sm bg-black/40">
             <CardContent className="p-8">
               <div className="text-center mb-8">
-                <QRCode data={qrData} />
+                <QRCode data={`{"ticket_detail_id": ${ticketId}}`} />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
