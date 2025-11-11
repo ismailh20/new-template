@@ -5,12 +5,15 @@ import { MapPin, Users, Car, Utensils } from "lucide-react";
 import { EditableElement } from "@/components/editable-element";
 import { useEditing } from "@/components/editing-context";
 import { useState, useEffect } from "react";
-import { createBrowserClient } from "@supabase/ssr";
 
 interface VenueData {
   location: string;
   capacity: number;
   image_venue: string;
+  facilities?: Facilities;
+}
+
+interface Facilities {
   parking: string;
   food_court: string;
 }
@@ -37,16 +40,7 @@ export function VenueSection({ eventId, merchantId }: VenueSectionProps) {
       if (!res.ok) {
         console.error("[v0] Venue API error:", res);
       } else if (data) {
-        const result: VenueData = {
-          location: data?.event.location,
-          capacity: data?.event.capacity,
-          image_venue: data?.event.image_venue,
-          parking: data?.parking,
-          food_court: data?.food_court,
-        };
-        console.log(result,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-        
-        setVenueData(result);
+        setVenueData(data);
       }
     } catch (error) {
       console.error("[v0] Failed to fetch venue data:", error);
@@ -181,7 +175,8 @@ Jakarta Utara 14240`
                     elementId="venue-parking-info"
                     className="text-card-foreground/80"
                     defaultValue={
-                      venueData?.parking || "5,000+ slot parkir tersedia"
+                      venueData?.facilities?.parking ||
+                      "5,000+ slot parkir tersedia"
                     }
                   />
                 </CardContent>
@@ -205,7 +200,8 @@ Jakarta Utara 14240`
                     elementId="venue-food-info"
                     className="text-card-foreground/80"
                     defaultValue={
-                      venueData?.food_court || "50+ tenant makanan & minuman"
+                      venueData?.facilities?.food_court ||
+                      "50+ tenant makanan & minuman"
                     }
                   />
                 </CardContent>

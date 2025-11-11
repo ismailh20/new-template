@@ -132,14 +132,7 @@ export function EventForm({ eventId }: EventFormProps) {
         if (!res.ok) {
           console.error("[v0] Supabase tickets error:", data);
         } else if (data) {
-          // Transform data to match expected format
-          const transformedData = data.map((ticket: any) => ({
-            ...ticket,
-            displayText: `${
-              ticket.ticket_type
-            } - Rp ${ticket.price.toLocaleString()}`,
-          }));
-          setTicketTypes(transformedData);
+          setTicketTypes(data);
         }
       } catch (error) {
         console.error("[v0] Failed to fetch ticket types:", error);
@@ -156,105 +149,77 @@ export function EventForm({ eventId }: EventFormProps) {
     setIsLoading(true);
 
     try {
-      const userData = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-      };
+      // ambil harga tiket dari list ticketTypes yang udah ada di state
+      const selectedTicket = ticketTypes.find((t) =>
+        formData.ticketType.includes(t.ticket_type)
+      );
 
-      const resUser = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/upsert`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      });
-
-      const dataUser = await resUser.json();
-      console.log(dataUser, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-
-
-      if (!resUser.ok) {
-        console.error("[v0] User insert error:", dataUser);
+      if (!selectedTicket) {
+        alert("Tipe tiket tidak ditemukan!");
+        return;
       }
 
-      const orderData = {
-        user_id: dataUser?.id,
-        event_id: Number.parseInt(eventId),
-        order_date: new Date().toISOString(),
-        status: "paid",
-        quantity: Number.parseInt(formData.ticketQuantity),
-        price:
-          ticketTypes.find((t) => formData.ticketType.includes(t.ticket_type))
-            ?.price! * Number.parseInt(formData.ticketQuantity),
-        ticket_id: ticketTypes.find((t) =>
-          formData.ticketType.includes(t.ticket_type)
-        )?.id,
-      };
-
-      const resOrder = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/order-transactions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(orderData),
-      });
-
-      const dataOrder = await resOrder.json()
-
-      console.log(dataOrder, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
-      
-
-      if (!resOrder.ok) {
-        console.error("[v0] Order insert error:", dataOrder);
-      }
-
-      const ticketDetail = {
+      // data yang dikirim ke backend
+      const payload = {
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
-        age: formData.age,
+        age: +formData.age,
+        eventId: +eventId,
         gender: formData.gender,
-        ticket_status: "valid",
-        event_date: startDate?.toISOString().split("T")[0] || null,
-        order_id: dataOrder.id,
+        ticketId: +selectedTicket.id,
+        startDate: startDate?.toISOString().split("T")[0],
+        endDate: endDate?.toISOString().split("T")[0],
+        quantity: Number.parseInt(formData.ticketQuantity),
       };
 
-      const resTicket = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/ticket-details`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ticketDetail),
-      });
+      console.log("Payload kirim ke backend:", payload);
 
-      const dataTicket = await resTicket.json()
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/orders`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      if (!resTicket.ok) {
-        console.error("[v0] Booking failed:", dataOrder);
-        alert(`Booking failed: ${dataOrder}`);
-      } else if (dataTicket) {
-        // Update form data with booking details
-        const updatedFormData = {
-          ...formData,
-          startDate,
-          endDate,
-          bookingDetails: {
-            ticketId: `${dataTicket.id}`,
-            orderId: dataTicket.id.toString(),
-            totalPrice: dataTicket.ticket_quantity * 350000, // Calculate based on ticket type
-            days: 1,
-          },
-        };
-        setFormData(updatedFormData);
-        setIsSubmitted(true);
-        localStorage.setItem(
-          "transactionData",
-          JSON.stringify(updatedFormData)
-        );
-        window.location.href =
-          "http://localhost:3001/payment/review-transaction";
+      const data = await res.json();
+      console.log("Response dari backend:", data);
+
+      if (!res.ok) {
+        console.error("Booking gagal:", data);
+        alert(`Booking gagal: ${data?.message || "Terjadi kesalahan"}`);
+        return;
       }
+
+      // ambil hasil bookingDetails dari response backend
+      const bookingDetails = data?.bookingDetails;
+
+      if (!bookingDetails) {
+        alert("Gagal mendapatkan detail booking!");
+        return;
+      }
+
+      // simpan data hasil booking ke formData & localStorage
+      const updatedFormData = {
+        ...formData,
+        startDate,
+        endDate,
+        bookingDetails,
+      };
+
+      setFormData(updatedFormData);
+      setIsSubmitted(true);
+
+      localStorage.setItem("transactionData", JSON.stringify(updatedFormData));
+
+      // redirect ke halaman payment
+      window.location.href = "http://localhost:3001/payment/review-transaction";
     } catch (error) {
-      console.error("[v0] Booking error:", error);
-      alert("Booking failed: Network error");
+      console.error("[v1] Booking error:", error);
+      alert("Booking gagal: Network error");
     } finally {
       setIsLoading(false);
     }
@@ -378,8 +343,7 @@ export function EventForm({ eventId }: EventFormProps) {
 
   if (isSubmitted) {
     const ticketId =
-      formData.bookingDetails?.ticketId ||
-      `${Date.now().toString().slice(-6)}`;
+      formData.bookingDetails?.ticketId || `${Date.now().toString().slice(-6)}`;
     const qrData = JSON.stringify({
       ticketId,
       orderId: formData.bookingDetails?.orderId,

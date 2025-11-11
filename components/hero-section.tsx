@@ -58,7 +58,7 @@ export function HeroSection({ eventId, merchantId }: HeroSectionProps) {
     return `${startDay}-${endDay} ${month} ${year}`
   }
 
-  const backgroundImage = elements["hero-background"] || "/api/upload?file=" + eventData?.hero_image
+  const backgroundImage = elements["hero-background"] || "/api/upload?file=" + eventData?.heroImage
   console.log(eventData);
   
 
